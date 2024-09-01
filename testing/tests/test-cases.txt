@@ -1,0 +1,23 @@
+1. echo
+	- string with newline character
+	- strings with escape character
+	- file redirection
+
+2. forx
+	- existing command e.g. 'ls'
+	- existing command with unsupported option e.g. 'ls -e'
+	- existing command with "help" option e.g. 'ls --help'
+	- existing command with an invalid parameter e.g. 'cat' with non-existing filename
+	- non-existing command
+	- child killed by signal (use 'silly')
+	- child exiting by itself (use 'silly')
+	- file redirection
+
+3. list
+	- one command in a list
+	- multiple commands in a list
+	- nested lists
+	- file redirection
+	- multiple file redirections involving truncation
+
+

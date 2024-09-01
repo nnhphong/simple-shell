@@ -1,0 +1,82 @@
+#!/bin/bash
+
+if [ $# -lt 2 ] ; then
+	echo "correct usage: ./automatic [shell script] [number of files]" 1>&2
+	echo "    shell script    - name of the executable shell script file to run" 1>&2
+	echo "    number of files - number of files used for file redirections" 1>&2
+	exit 1
+fi
+
+make
+
+bold='\033[1m'
+green='\033[0;32m'
+red='\033[0;31m'
+reset='\033[0m'
+
+failed=false
+
+echo -e "${bold}$1${reset}"
+
+output=$(./test "$1" 2>/dev/null)
+
+echo -e "${bold}STDOUT${reset}"
+if [ -n "$(diff <(./"$1" 2>/dev/null) <(echo "$output" | grep -v "Return value = "))" ] ; then
+	echo -e "${red}Expected: ${reset}"
+	./"$1"
+	echo -e "${red}Actual: ${reset}"
+	echo "$output" | grep -v "Return value = "
+	failed=true
+else
+	echo -e "${green}Passed :)${reset}"
+fi
+
+rm -f f?
+rm -f expected-f?
+
+./"$1" > /dev/null 2>&1
+expectedExitCode="$?"
+
+if [ $2 -ge 1 ] ; then
+	for i in $(seq 1 $2) ; do
+		mv f"$i" expected-f"$i"
+	done
+fi
+
+./test "$1" > /dev/null 2>&1
+
+if [ $2 -ge 1 ] ; then
+	for i in $(seq 1 $2) ; do
+		echo
+		echo -e "${bold}f$i${reset}"
+		if [ -n "$(diff "expected-f$i" "f$i")" ] ; then
+			echo -e "${red}Expected: ${reset}"
+			cat "expected-f$i"
+			echo -e "${red}Actual: ${reset}"
+			cat "f$i"
+			failed=true
+		else
+			echo -e "${green}Passed :)${reset}"
+		fi
+	done
+fi
+
+actualExitCode=$(echo "$output" | grep "Return value = " | cut -d ' ' -f 4)
+
+echo
+echo -e "${bold}EXIT CODE${reset}"
+if [ "$expectedExitCode" -ne "$actualExitCode" ] ; then
+	echo -e "${red}Expected: ${reset}"
+	echo $expectedExitCode
+	echo -e "${red}Actual: ${reset}"
+	echo $actualExitCode
+	failed=true
+else
+	echo $expectedExitCode
+	echo -e "${green}Passed :)${reset}"
+fi
+
+if [ $failed = 'true' ] ; then
+	exit 1
+fi
+
